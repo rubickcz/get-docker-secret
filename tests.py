@@ -19,8 +19,12 @@ class TestSecrets(unittest.TestCase):
         self.write_secret('my_key', 'my_value')
         self.write_secret('my_int_key', '5')
         self.write_secret('my_float_key', '5.4')
-        self.write_secret('my_bool_key_true', 'true')
-        self.write_secret('my_bool_key_false', 'false')
+        self.write_secret('my_bool_key_true_1', True)
+        self.write_secret('my_bool_key_false_1', False)
+        self.write_secret('my_bool_key_true_2', 'True')
+        self.write_secret('my_bool_key_false_2', 'False')
+        self.write_secret('my_bool_key_true_3', 'true')
+        self.write_secret('my_bool_key_false_3', 'false')
         self.write_secret('UPPER_CASE_KEY', 'my_value')
 
     def tearDown(self):
@@ -55,13 +59,14 @@ class TestSecrets(unittest.TestCase):
         self.assertIsInstance(value, float)
         self.assertEqual(value, 5.4)
 
-        value = get_docker_secret('my_bool_key_true', cast_to=bool, secrets_dir=self.secrets_dir)
-        self.assertIsInstance(value, bool)
-        self.assertTrue(value)
+        for i in range(1, 3):
+            value = get_docker_secret('my_bool_key_true_{}'.format(i), cast_to=bool, secrets_dir=self.secrets_dir)
+            self.assertIsInstance(value, bool)
+            self.assertTrue(value)
 
-        value = get_docker_secret('my_bool_key_false', cast_to=bool, secrets_dir=self.secrets_dir)
-        self.assertIsInstance(value, bool)
-        self.assertFalse(value)
+            value = get_docker_secret('my_bool_key_false_{}'.format(i), cast_to=bool, secrets_dir=self.secrets_dir)
+            self.assertIsInstance(value, bool)
+            self.assertFalse(value)
 
     def test_cast_fail(self):
         with self.assertRaises(ValueError):
@@ -174,6 +179,10 @@ class TestEnvvar(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             get_docker_secret('MY_BOOL_KEY_TRUE', cast_to=int, safe=False)
+
+    def test_env_prefix(self):
+        value = get_docker_secret('KEY', env_prefix='MY_')
+        self.assertEqual(value, 5)
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ root = os.path.abspath(os.sep)
 
 
 def get_docker_secret(name, default=None, cast_to=str, autocast_name=True, getenv=True, safe=True,
-                      secrets_dir=os.path.join(root, 'var', 'run', 'secrets')):
+                      secrets_dir=os.path.join(root, 'var', 'run', 'secrets'), env_prefix=''):
     """This function fetches a docker secret
 
     :param name: the name of the docker secret
@@ -14,6 +14,7 @@ def get_docker_secret(name, default=None, cast_to=str, autocast_name=True, geten
     :param getenv: if environment variable should be fetched as fallback
     :param safe: Whether the function should raise exceptions
     :param secrets_dir: the directory where the secrets are stored
+    :param env_prefix: prefix that is prepended to the environment variable name
     :returns: docker secret or environment variable depending on params
     :raises TypeError: if cast fails due to wrong type (None)
     :raises ValueError: if casts fails due to Value
@@ -33,7 +34,7 @@ def get_docker_secret(name, default=None, cast_to=str, autocast_name=True, geten
     except IOError as e:
         # try to read from env if enabled
         if getenv:
-            value = os.environ.get(name_env)
+            value = os.environ.get('{}{}'.format(env_prefix, name_env))
 
     # set default value if no value found
     if value is None:
@@ -47,9 +48,9 @@ def get_docker_secret(name, default=None, cast_to=str, autocast_name=True, geten
 
         # special case bool
         if cast_to == bool:
-            if value not in ('True', 'true', 'False', 'false'):
+            if value not in (True, 'True', 'true', False, 'False', 'false'):
                 raise ValueError('value %s not of type bool' % value)
-            value = 1 if value in ('True', 'true') else 0
+            value = 1 if value in (True, 'True', 'true') else 0
 
         # try to cast
         return cast_to(value)
